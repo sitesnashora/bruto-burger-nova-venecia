@@ -322,8 +322,9 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const brl=v=>'R$ '+v.toFixed(2).replace('.',',');
 const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const U=(id,w,h)=>`https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&h=${h}&q=68`;
-let lenis=null;if(window.Lenis&&!RM){lenis=new Lenis({duration:1.05,smoothWheel:true});const raf=t=>{lenis.raf(t);requestAnimationFrame(raf)};requestAnimationFrame(raf)}
-const scrollToEl=(el,off=-70)=>{lenis?lenis.scrollTo(el,{offset:off}):el.scrollIntoView({behavior:'smooth'})};
+let lenis=null;const TOUCH=matchMedia('(hover: none), (pointer: coarse)').matches;
+if(window.Lenis&&!RM&&!TOUCH){lenis=new Lenis({duration:1.05,smoothWheel:true});const raf=t=>{lenis.raf(t);requestAnimationFrame(raf)};requestAnimationFrame(raf)}
+const scrollToEl=(el,off=-70)=>{const y=Math.max(0,Math.round(el.getBoundingClientRect().top+scrollY+off));if(lenis)lenis.scrollTo(y,{force:true});else scrollTo({top:y,behavior:RM?'auto':'smooth'})};
 $$('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(!t)return;e.preventDefault();scrollToEl(t,a.getAttribute('href')==='#topo'?-200:-64)}));
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800)};
 
@@ -376,9 +377,10 @@ let auto=null,vis=false,held=0;const hold=()=>{held=Date.now()};
 ['pointerdown','touchstart','wheel','mouseenter'].forEach(ev=>rail.addEventListener(ev,hold,{passive:true}));
 new IntersectionObserver(es=>{vis=es[0].isIntersecting},{threshold:.5}).observe(rail);
 if(!RM)auto=setInterval(()=>{if(vis&&!openOv&&Date.now()-held>6000&&!document.hidden)go(1)},3800);
-$$('#cats button').forEach(b=>b.addEventListener('click',()=>{scrollToEl($('#c-'+b.dataset.c),-126);setCat(b.dataset.c)}));
-function setCat(id){$$('#cats button').forEach(b=>{const on=b.dataset.c===id;b.classList.toggle('on',on);if(on){const n=$('#cats');n.scrollTo({left:b.offsetLeft-n.clientWidth/2+b.offsetWidth/2,behavior:RM?'auto':'smooth'})}})}
-const cio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)setCat(e.target.id.slice(2))}),{rootMargin:'-45% 0px -50% 0px'});$$('.cat-sec').forEach(s=>cio.observe(s));
+$$('#cats button').forEach(b=>b.addEventListener('click',()=>{catLock=Date.now();scrollToEl($('#c-'+b.dataset.c),-126);setCat(b.dataset.c)}));
+function setCat(id){$$('#cats button').forEach(b=>{const on=b.dataset.c===id;if(b.classList.contains('on')===on)return;b.classList.toggle('on',on);if(on){const n=b.parentElement;n.scrollLeft=b.offsetLeft-n.clientWidth/2+b.offsetWidth/2}})}
+let catLock=0;
+const cio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&Date.now()-catLock>1200)setCat(e.target.id.slice(2))}),{rootMargin:'-45% 0px -50% 0px'});$$('.cat-sec').forEach(s=>cio.observe(s));
 
 /* ===== modais ===== */
 let openOv=null;
