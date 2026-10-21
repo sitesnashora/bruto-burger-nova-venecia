@@ -400,7 +400,7 @@ function openItem(id){cur=PRODUCTS.find(p=>p.id===id);if(!cur)return;qty=1;
  sh.querySelectorAll('.grp[data-g]').forEach(gEl=>{const g=cur.opts[+gEl.dataset.g];gEl.addEventListener('change',()=>{if(g.max){const ch=gEl.querySelectorAll('input:checked').length;gEl.querySelectorAll('input:not(:checked)').forEach(i=>{i.disabled=ch>=g.max;i.closest('.opt').classList.toggle('dis',ch>=g.max)});if(ch>=g.max)toast('Máximo de '+g.max+' adicionais')}calc()})});
  $('#addBtn').onclick=addCur;calc();open($('#ovItem'))}
 function sel(){const out=[];let extra=0;$$('#itemSheet .grp[data-g]').forEach(gEl=>{const g=cur.opts[+gEl.dataset.g];gEl.querySelectorAll('input:checked').forEach(i=>{const [n,pr]=g.items[+i.value];extra+=pr;out.push({g:g.g,n,pr})})});return{out,extra}}
-function calc(){const {extra}=sel();$('#itTot').textContent=brl((cur.price+extra)*qty)}
+function calc(){const {extra}=sel();const er=$('#itErr');if(er)er.textContent='';$('#itTot').textContent=brl((cur.price+extra)*qty)}
 function addCur(){const {out,extra}=sel();const miss=cur.opts.find((g,gi)=>g.req&&!$(`#itemSheet .grp[data-g="${gi}"] input:checked`));if(miss){$('#itErr').textContent='Escolha: '+miss.g;$(`#itemSheet .grp[data-g="${cur.opts.indexOf(miss)}"]`).scrollIntoView({block:'center',behavior:'smooth'});return}
  const obs=($('#obs').value||'').trim().slice(0,140);
  const opts=out.filter(o=>o.n!=='Só o burger').map(o=>{const pf={'Adicionais':'+ ','Tamanho':'tamanho: ','Sabor':'sabor: ','Refri':'refri: '}[o.g];return (pf||'')+(pf?o.n:o.n.toLowerCase())+(o.pr?' ('+brl(o.pr)+')':'')});
